@@ -136,7 +136,7 @@ Warning: Kindeditor will load after all the objects loaded.
   # or
   <%= form.input :content, :as => :kindeditor, :label => false, :input_html => { :width => 800, :height => 300 } %>
 ```
-  
+
 ### formtastic:
 
 ```ruby
@@ -163,7 +163,7 @@ You can get content like this:
 ## Upload options configuration
 
 When you run "rails generate rails_kindeditor:install", installer will copy configuration files in config/initializers folder.
-You can customize some option for uploading. 
+You can customize some option for uploading.
 
 ```ruby
   # Specify the subfolders in public directory.
@@ -181,14 +181,20 @@ You can customize some option for uploading.
   # eg: 1600x1600 => 800x800
   #     1600x800  => 800x400
   #     400x400   => 400x400 # No Change
-  # config.image_resize_to_limit = [800, 800]
+  # Support two different formats: Hash and Array
+  # If you want to save the original image, you should use Hash to configure.
+  # e.g.
+  # config.image_resize_to_limit = {small: [400,300],mini: [60,40]}
+  # This means you will use small version images to display,and save the original images and mini version images.
+  # If you only want to save the resized image, please keep the original way: using Array
+  # e.g. config.image_resize_to_limit = [800, 800]
 ```
 
 ## Save upload file information into database(optional)
 
 rails_kindeditor can save upload file information into database.
 
-### Just run migration generate, there are two ORM options for you: 1.active_record 2.mongoid, default is active_record.
+### Just run migration generate, there are two ORM options for you: 1.active_record 2.mongoid(You should include it before rails_kindeditor gem.), default is active_record.
 
 ```bash
   rails generate rails_kindeditor:migration
@@ -202,18 +208,26 @@ rails_kindeditor can save upload file information into database.
   rake db:migrate
 ```
 
-### Delete uploaded files automatically (only for active_record)
+### Delete uploaded files automatically (support active_record and mongoid)
 
 You can specify the owner for uploaded files, when the owner was destroying, all the uploaded files(belongs to the owner) will be destroyed automatically.
 
 ####1. specify the owner_id for kindeditor
 
 ```ruby
+   # _form.html.erb
    <%= form_for @article do |f| %>
      ...
+     <%= f.text_field :id, :type => "hidden" %>
      <%= f.kindeditor :content, :owner_id => @article.id  %>
      ...
    <% end %>
+   # ArticlesController
+   def create
+     @article = Article.new(article_params)
+     @article.id = params[:article][:id] if params[:article][:id]
+     ...
+   end
 ```
 
 ```ruby
@@ -223,7 +237,16 @@ Warnning: the @article must be created before this scene, the @article.id should
 ####2. add has_many_kindeditor_assets in your own model
 
 ```ruby
+  # ActiveRecord
   class Article < ActiveRecord::Base
+    has_many_kindeditor_assets :attachments, :dependent => :destroy
+    # has_many_kindeditor_assets :attachments, :dependent => :nullify
+    # has_many_kindeditor_assets :your_name, :dependent => :destroy
+  end
+
+  # Mongoid
+  class Article
+    include Mongoid::Document
     has_many_kindeditor_assets :attachments, :dependent => :destroy
     # has_many_kindeditor_assets :attachments, :dependent => :nullify
     # has_many_kindeditor_assets :your_name, :dependent => :destroy
@@ -310,9 +333,9 @@ rails_kindeditor可以帮助你的rails程序集成kindeditor,包括了图片和
 ```ruby
   kindeditor_tag :content, 'default content value', :simple_mode => true
   f.kindeditor :content, :simple_mode => true
-  f.input :content, :as => :kindeditor, :input_html => { :simple_mode => true } # simple_form & formtastic  
+  f.input :content, :as => :kindeditor, :input_html => { :simple_mode => true } # simple_form & formtastic
 ```
-     
+
 完毕！
 
 ### 如何在turbolinks下使用
@@ -428,6 +451,13 @@ f.kindeditor :content, owner_id: @article.id, data: {upload: kindeditor_upload_j
   # eg: 1600x1600 => 800x800
   #     1600x800  => 800x400
   #     400x400   => 400x400 # 图片小于该限制尺寸则不作处理
+  # 支持两种不同格式的赋值：数组和哈希
+  # 若想保存原始图片，请使用哈希格式进行配置。
+  # 例如：
+  # config.image_resize_to_limit = {small: [400,300],mini: [60,40]}
+  # 以上配置说明：默认使用small版本的图片用于显示，并保存原始图片和mini版本。
+  # 若只想保存裁剪后的图片，请使用数组方式进行配置。
+  # 例如：
   # config.image_resize_to_limit = [800, 800]
 ```
 
@@ -435,7 +465,7 @@ f.kindeditor :content, owner_id: @article.id, data: {upload: kindeditor_upload_j
 
 rails_kindeditor 可以将上传文件信息记录入数据库，以便扩展应用.
 
-### 运行下面的代码，有两项选项：1.active_record 2.mongoid，默认是active_record。
+### 运行下面的代码，有两项选项：1.active_record 2.mongoid(请在包含rails_kindeditor之前包含mongoid)，默认是active_record。
 
 ```bash
   rails generate rails_kindeditor:migration
@@ -449,18 +479,26 @@ rails_kindeditor 可以将上传文件信息记录入数据库，以便扩展应
   rake db:migrate
 ```
 
-### 自动删除上传的文件(仅在active_record下工作)
+### 自动删除上传的文件(支持active_record和mongoid)
 
 你可以为上传的文件指定归属，比如一名用户，或者一篇文章，当用户或者文章被删除时，所有属于该用户或者该文章的上传文件将会被自动删除。
 
 ####1. 为kindeditor指定owner_id
 
 ```ruby
+   # _form.html.erb
    <%= form_for @article do |f| %>
      ...
+     <%= f.text_field :id, :type => "hidden" %>
      <%= f.kindeditor :content, :owner_id => @article.id  %>
      ...
    <% end %>
+   # ArticlesController
+   def create
+     @article = Article.new(article_params)
+     @article.id = params[:article][:id] if params[:article][:id]
+     ...
+   end
 ```
 
 ```ruby
@@ -470,7 +508,16 @@ rails_kindeditor 可以将上传文件信息记录入数据库，以便扩展应
 ####2. 在你自己的模型里加入has_many_kindeditor_assets
 
 ```ruby
+  # ActiveRecord
   class Article < ActiveRecord::Base
+    has_many_kindeditor_assets :attachments, :dependent => :destroy
+    # has_many_kindeditor_assets :attachments, :dependent => :nullify
+    # has_many_kindeditor_assets :your_name, :dependent => :destroy
+  end
+
+  # Mongoid
+  class Article
+    include Mongoid::Document
     has_many_kindeditor_assets :attachments, :dependent => :destroy
     # has_many_kindeditor_assets :attachments, :dependent => :nullify
     # has_many_kindeditor_assets :your_name, :dependent => :destroy

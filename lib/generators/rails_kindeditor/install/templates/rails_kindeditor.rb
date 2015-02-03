@@ -17,8 +17,8 @@ RailsKindeditor.setup do |config|
   # Support two different formats: Hash and Array
   # If you want to save the original image, you should use Hash to configure.
   # e.g.
-  # config.image_resize_to_limit = {small: [400,300],mini: [60,40]}{small: [400,300],mini: [60,40]}
-  # This means you want to use small version image to display,and save the original image and mini version image.
+  # config.image_resize_to_limit = {small: [400,300],mini: [60,40]}
+  # This means you will use small version images to display,and save the original images and mini version images.
   # If you only want to save the resized image, please keep the original way: using Array
   # e.g. config.image_resize_to_limit = [800, 800]
 
