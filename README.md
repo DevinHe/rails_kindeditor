@@ -64,7 +64,7 @@ additionally, rails_kindeditor provides one "simple_mode" parameter for render s
   f.input :content, :as => :kindeditor, :input_html => { :simple_mode => true } # simple_form & formtastic
 ```
 
-That's all.
+That's all.[Demo](https://github.com/DevinHe/kindeditor_demo)
 
 ### Work with turbolinks
 
